@@ -7,7 +7,6 @@ const meta = {
   version: "1.0.0",
   description: "Save and retrieve posted text via API",
   author: "Christian Geronimo",
-  method: "post",
   category: "Utility",
   path: "/text-saver"
 };
@@ -42,4 +41,19 @@ async function onGetMessages({ req, res }) {
   });
 }
 
-module.exports = { meta, onStart, onGetMessages };
+// Main Vercel handler
+export default async function handler(req, res) {
+  if (req.method === "POST") {
+    return onStart({ req, res });
+  }
+  if (req.method === "GET") {
+    return onGetMessages({ req, res });
+  }
+
+  res.status(405).json({
+    author: "Christian Geronimo",
+    error: "Method not allowed"
+  });
+}
+
+export { meta, onStart, onGetMessages };
