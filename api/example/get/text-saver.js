@@ -1,17 +1,18 @@
+// api/text-saver.js
+
+const texts = []; // memory-only storage (clears on redeploy/restart)
+
 const meta = {
   name: "text-saver",
-  version: "1.0.2",
-  description: "Save and retrieve posted text via API (memory-only, Vercel ready)",
+  version: "1.0.0",
+  description: "Save and retrieve posted text via API",
   author: "Christian Geronimo",
   method: "post",
   category: "Utility",
-  path: "/send"
+  path: "/text-saver"
 };
 
-// Temporary in-memory storage (reset kapag nag-redeploy o nag-cold start)
-let messages = [];
-
-// === POST /send ===
+// Handle POST request (save text)
 async function onStart({ req, res }) {
   const { text } = req.body;
 
@@ -22,47 +23,23 @@ async function onStart({ req, res }) {
     });
   }
 
-  try {
-    const logLine = `${new Date().toISOString()} - ${text}`;
-    messages.push(logLine);
+  texts.push({ time: new Date().toISOString(), text });
 
-    console.log("📩 Received and saved:", text);
+  console.log("📩 Saved:", text);
 
-    return res.json({
-      author: "Christian Geronimo",
-      message: "✅ Text saved (memory only, resets on restart)"
-    });
-  } catch (err) {
-    console.error("Error:", err.message);
-    return res.status(500).json({
-      author: "Christian Geronimo",
-      error: err.message
-    });
-  }
+  return res.json({
+    author: "Christian Geronimo",
+    message: "✅ Text saved successfully!",
+    saved: text
+  });
 }
 
-// === GET /messages ===
+// Handle GET request (retrieve texts)
 async function onGetMessages({ req, res }) {
-  try {
-    if (messages.length === 0) {
-      return res.json({
-        author: "Christian Geronimo",
-        messages: [],
-        note: "No messages saved yet."
-      });
-    }
-
-    return res.json({
-      author: "Christian Geronimo",
-      messages
-    });
-  } catch (err) {
-    console.error("Error:", err.message);
-    return res.status(500).json({
-      author: "Christian Geronimo",
-      error: err.message
-    });
-  }
+  return res.json({
+    author: "Christian Geronimo",
+    messages: texts
+  });
 }
 
 module.exports = { meta, onStart, onGetMessages };
