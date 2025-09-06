@@ -7,11 +7,12 @@ const meta = {
   version: "1.0.0",
   description: "Save and retrieve posted text via API",
   author: "Christian Geronimo",
+  method: "post",
   category: "Utility",
   path: "/text-saver"
 };
 
-// Handle POST request (save text)
+// === Handlers in your format ===
 async function onStart({ req, res }) {
   const { text } = req.body;
 
@@ -33,7 +34,6 @@ async function onStart({ req, res }) {
   });
 }
 
-// Handle GET request (retrieve texts)
 async function onGetMessages({ req, res }) {
   return res.json({
     author: "Christian Geronimo",
@@ -41,19 +41,16 @@ async function onGetMessages({ req, res }) {
   });
 }
 
-// Main Vercel handler
-export default async function handler(req, res) {
+// === Vercel-compatible default export ===
+export default function handler(req, res) {
   if (req.method === "POST") {
     return onStart({ req, res });
   }
   if (req.method === "GET") {
     return onGetMessages({ req, res });
   }
-
-  res.status(405).json({
-    author: "Christian Geronimo",
-    error: "Method not allowed"
-  });
+  return res.status(405).json({ error: "❌ Method not allowed!" });
 }
 
-export { meta, onStart, onGetMessages };
+// Export din yung meta + handlers (kung gusto mong gamitin sa ibang system)
+module.exports = { meta, onStart, onGetMessages };
