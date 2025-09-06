@@ -1,20 +1,17 @@
-const fs = require("fs");
-const path = require("path");
-
-const SAVE_FOLDER = "saved_data";
-const SAVE_FILE = "saved_texts.txt";
-const filePath = path.join(SAVE_FOLDER, SAVE_FILE);
-
 const meta = {
   name: "text-saver",
-  version: "1.0.1",
-  description: "Save and retrieve posted text via API",
+  version: "1.0.2",
+  description: "Save and retrieve posted text via API (memory-only, Vercel ready)",
   author: "Christian Geronimo",
   method: "post",
   category: "Utility",
   path: "/send"
 };
 
+// Temporary in-memory storage (reset kapag nag-redeploy o nag-cold start)
+let messages = [];
+
+// === POST /send ===
 async function onStart({ req, res }) {
   const { text } = req.body;
 
@@ -26,19 +23,14 @@ async function onStart({ req, res }) {
   }
 
   try {
-    if (!fs.existsSync(SAVE_FOLDER)) {
-      fs.mkdirSync(SAVE_FOLDER);
-    }
-
-    const logLine = `${new Date().toISOString()} - ${text}\n`;
-
-    fs.appendFileSync(filePath, logLine, "utf-8");
+    const logLine = `${new Date().toISOString()} - ${text}`;
+    messages.push(logLine);
 
     console.log("📩 Received and saved:", text);
 
     return res.json({
       author: "Christian Geronimo",
-      message: `✅ Text saved to ${filePath}!`
+      message: "✅ Text saved (memory only, resets on restart)"
     });
   } catch (err) {
     console.error("Error:", err.message);
@@ -49,10 +41,10 @@ async function onStart({ req, res }) {
   }
 }
 
-// New GET endpoint to retrieve saved texts
+// === GET /messages ===
 async function onGetMessages({ req, res }) {
   try {
-    if (!fs.existsSync(filePath)) {
+    if (messages.length === 0) {
       return res.json({
         author: "Christian Geronimo",
         messages: [],
@@ -60,11 +52,9 @@ async function onGetMessages({ req, res }) {
       });
     }
 
-    const content = fs.readFileSync(filePath, "utf-8").trim().split("\n");
-
     return res.json({
       author: "Christian Geronimo",
-      messages: content
+      messages
     });
   } catch (err) {
     console.error("Error:", err.message);
