@@ -1,6 +1,6 @@
 // api/text-saver.js
 
-const texts = []; // memory-only storage (clears on redeploy/restart)
+let texts = []; // memory-only storage (clears on redeploy/restart)
 
 const meta = {
   name: "text-saver",
@@ -11,10 +11,30 @@ const meta = {
   path: "/text-saver"
 };
 
-// Main handler (detect GET vs POST)
+// Helper: parse JSON body safely
+async function parseBody(req) {
+  return new Promise((resolve, reject) => {
+    try {
+      let data = "";
+      req.on("data", chunk => (data += chunk));
+      req.on("end", () => {
+        try {
+          resolve(JSON.parse(data || "{}"));
+        } catch {
+          resolve({});
+        }
+      });
+    } catch (err) {
+      resolve({});
+    }
+  });
+}
+
+// Main handler
 async function onStart({ req, res }) {
   if (req.method === "POST") {
-    const { text } = req.body;
+    const body = await parseBody(req);
+    const { text } = body;
 
     if (!text) {
       return res.status(400).json({
@@ -28,6 +48,7 @@ async function onStart({ req, res }) {
     console.log("📩 Saved:", text);
 
     return res.json({
+      creator: "ChanZAi",
       author: "Christian Geronimo",
       message: "✅ Text saved successfully!",
       saved: text
@@ -36,6 +57,7 @@ async function onStart({ req, res }) {
 
   if (req.method === "GET") {
     return res.json({
+      creator: "ChanZAi",
       author: "Christian Geronimo",
       messages: texts
     });
